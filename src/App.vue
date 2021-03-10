@@ -126,7 +126,7 @@
           
         </div>
         <button 
-        @click="sel = null"
+        @click="stopFetching()"
         type="button" class="absolute top-0 right-0">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -163,17 +163,18 @@ export default {
       ticker: "",
       tickers: [],
       sel: null,
-      graph: []
+      graph: [],
+      fetchingInterval: 0
     };
   },
   methods: {
     add(){
       const currentTicker = {
         name: this.ticker,
-        price: "7"
+        price: "waiting"
       };
       this.tickers.push(currentTicker);
-      setInterval(async () => {
+      this.fetchingInterval = setInterval(async () => {
         const f = await fetch(
           `https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=dcd7440fec614f31381d7b9716242885add09e6ad885092d93976a91d95a3b7c`
           );
@@ -186,6 +187,12 @@ export default {
           }
       }, 15000);
       this.ticker="";
+    },
+
+    stopFetching(){      
+      clearInterval(this.fetchingInterval);
+      this.sel = null;
+      alert("Stop fetching");
     },
 
     select(ticker){
@@ -205,7 +212,19 @@ export default {
       return this.graph.map(
         price => 5 + ((price - minValue)* 95 ) / (maxValue -minValue )
       );
+    },
+
+    async fetchData(){
+      
+      const responce = await fetch("https://min-api.cryptocompare.com/data/all/coinlist?summary=true");
+      const JsonData = await responce.json();
+      localStorage.setItem('coinList', JSON.stringify(JsonData));
+
     }
+  },
+
+  created() {
+    this.fetchData();
   }
 };
 </script>
